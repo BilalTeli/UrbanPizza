@@ -49,14 +49,11 @@ export const signIn=async(req,res)=>{
         }
         
 
-        const hashedPassword=await bcrypt.hash(password,10)
-        user=await User.create({
-            fullName,
-            email,
-            role,
-            mobile,
-            password:hashedPassword
-        })
+       
+        const isMatch=await bcrypt.compare(password,user.password)
+        if(!isMatch){
+            return res.status(400).json({message:"incorrect password"})
+        }
 
         const token=await genToken(user._id)
         res.cookie("token",token,{
@@ -65,10 +62,20 @@ export const signIn=async(req,res)=>{
             maxAge:7*24*60*60*1000,
             httpOnly:true
         })
-        return res.status(201).json(user)
+        return res.status(200).json(user)
     }
     catch(error)
     {
-       return res.status(500).json(`sign up error ${error}`)  
+       return res.status(500).json(`sign in error ${error}`)  
+    }
+}
+export const signOut=async(req,res)=>{
+    try{
+        res.clearCookie("token")
+        return res.status(200).json({message:"log out successfully"})
+    }
+    catch(error)
+    {
+        return res.status(500).json(`sign out error ${error}`)
     }
 }
